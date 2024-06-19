@@ -1,0 +1,10 @@
+# Ignore backup and temp files
+*~
+\#*#
+\.\#*
+
+# Ignore build directories
+build/
+
+# Ignore generated documentation
+docs/html
