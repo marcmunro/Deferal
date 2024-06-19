@@ -91,4 +91,4 @@ characters read from a serial interface.
 
 ## Installation
 
-From gitghub.
+Get it from gigtub: https://github.com/marcmunro/Deferal.git
