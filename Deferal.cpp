@@ -8,6 +8,8 @@
  * \endcode
  * @brief  
  * Implements the Deferal class.
+ *
+ * A Deferal is...
  * 
  */
 
@@ -143,9 +145,10 @@ Deferal::checkDeferals()
 {
     Deferal *entry = deferal_list_;
     while (entry) {
-	if (entry->stopped()) {
-	    /* The stopped() method will have removed entry from
+	if (entry->expired()) {
+	    /* The stop() method will have removed entry from
 	     * deferal_list_, so we don't need to. */
+	    entry->stop(true, true);
 	    return entry;
 	}
 	entry = entry->next_;
@@ -155,13 +158,29 @@ Deferal::checkDeferals()
 }
 /**
  * @brief Add a Deferal object to our #deferal_list_.
+ *
+ * Adds the Deferal to the end of the list.  If #entry is already in
+ * #deferal_list_, it does nothing.
+ *
  * @param entry The new Deferal, to be added to #deferal_list_
  */
 void
 Deferal::addDeferalEntry(Deferal *entry)
 {
-    entry->next_ = deferal_list_;
-    Deferal::deferal_list_ = entry;
+    if (deferal_list_) {
+	Deferal *deferal = deferal_list_;
+	if (deferal == entry) {
+	    return;
+	}
+	while (deferal->next_) {
+	    deferal = deferal->next_;
+	}
+	deferal->next_ = entry;
+    }
+    else {
+	deferal_list_ = entry;
+    }
+
 }
 
 /**
@@ -175,6 +194,7 @@ Deferal::removeDeferalEntry(Deferal *to_remove)
     while (*p_entry) {
 	if (*p_entry == to_remove) {
 	    *p_entry = to_remove->next_;
+	    to_remove->next_ = NULL;
 	    return;
 	}
 	p_entry = &((*p_entry)->next_);
@@ -217,6 +237,22 @@ Deferal::stop(bool run_post_fn, bool allow_repeat)
     }
 }
 
+bool
+Deferal::expired()
+{
+    if (status_ == DEFERAL_RUNNING) {
+	unsigned long now = timer_fn_();
+	// If (now - start_time) > MAXINT/2 then our start time is in
+	// the future.  That's a bid odd but it doesn't mean we have
+	// expired.
+	if ((now - start_time_) > (unsigned long) (-1L >> 1)) {
+	    return false;
+	}
+	return ((now - start_time_) >= delay_time_);
+    }
+    return false;
+}
+
 /**
  * @brief Check the current state of a Deferal, expiring it as needed.
  * 
@@ -227,11 +263,8 @@ Deferal::stop(bool run_post_fn, bool allow_repeat)
 void
 Deferal::updateStatus()
 {
-    if (status_ == DEFERAL_RUNNING) {
-	unsigned long now = timer_fn_();
-	if ((now - start_time_) >= delay_time_) {
-	    stop(true, true);
-	}
+    if (expired()) {
+	stop(true, true);
     }
 }
 
@@ -320,10 +353,12 @@ Deferal::again(unsigned long delay, bool run_post_fn)
 	// restarted, had it done so.
 	start_time_ += delay_time_;
 	delay_time_ = this_delay;
-	while ((start_time_ + delay_time_) < now) {
+	while ((now - start_time_) > delay_time_) {
 	    // Running again still leaves the finish time in the past
 	    if (run_post_fn && defer_fn_) {
+		status_ = DEFERAL_PROCESSING;
 		defer_fn_(defer_fn_param_);
+		status_ = DEFERAL_STOPPED;
 	    }
 	    if (!autorepeat_) {
 		// If we are to autorepeat, we'll keep running the
@@ -335,6 +370,9 @@ Deferal::again(unsigned long delay, bool run_post_fn)
 	}
 	status_ = DEFERAL_RUNNING;
 	addDeferalEntry(this);
+    }
+    else {
+	start(delay);
     }
 }
 

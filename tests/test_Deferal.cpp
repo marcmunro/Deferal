@@ -95,7 +95,9 @@ class Cppunit_tests: public Cppunit
 	Deferal autodelay(200, endDelay, NULL, true);
 	
 	milli_count = 1250;
-	CHECKP(Deferal::checkDeferals(), NULL);
+	// The expired Deferal is reported even though it has been
+	// automatically restarted.
+	CHECKP(Deferal::checkDeferals(), (void *) &autodelay);
         CHECKT(counter == 1);
 	milli_count = 1450;
 	CHECKT(!autodelay.stopped());
@@ -148,9 +150,9 @@ class Cppunit_tests: public Cppunit
         CHECKT(!delay3.stopped());
 	milli_count = 1200;
 	CHECK(delay1.remaining(), 0);
-	CHECKP(Deferal::checkDeferals(), &delay3);  
-	CHECKP(Deferal::checkDeferals(), delay2);  
 	CHECKP(Deferal::checkDeferals(), &delay1);  
+	CHECKP(Deferal::checkDeferals(), delay2);  
+	CHECKP(Deferal::checkDeferals(), &delay3);  
 	CHECKP(Deferal::checkDeferals(), NULL);
         CHECKT(delay1.stopped());
         CHECKT(delay2->stopped());
@@ -163,9 +165,9 @@ class Cppunit_tests: public Cppunit
 	// Delays will be complete at milli_count = 1400
 	CHECKP(Deferal::checkDeferals(), NULL);
 	milli_count = 1500;
-	CHECKP(Deferal::checkDeferals(), delay2);  
-	CHECKP(Deferal::checkDeferals(), &delay3);  
 	CHECKP(Deferal::checkDeferals(), &delay1);  
+	CHECKP(Deferal::checkDeferals(), &delay3);  
+	CHECKP(Deferal::checkDeferals(), delay2);  
 	CHECKP(Deferal::checkDeferals(), NULL);
 
 	// Run 2 delays again.
@@ -174,8 +176,8 @@ class Cppunit_tests: public Cppunit
 	// Delays will be complete at milli_count = 1600
 	CHECKP(Deferal::checkDeferals(), NULL);
 	milli_count = 1650;
-	CHECKP(Deferal::checkDeferals(), delay2);  
 	CHECKP(Deferal::checkDeferals(), &delay1);  
+	CHECKP(Deferal::checkDeferals(), delay2);  
 	CHECKP(Deferal::checkDeferals(), NULL);
 
 	CHECK(delay3.remaining(), -250);
@@ -199,8 +201,8 @@ class Cppunit_tests: public Cppunit
 	CHECK(delay3.remaining(), -20);
 	CHECK(delay1.remaining(), -20);
 
-	CHECKP(Deferal::checkDeferals(), &delay1);  
 	CHECKP(Deferal::checkDeferals(), &delay3);  
+	CHECKP(Deferal::checkDeferals(), &delay1);  
 	CHECKP(Deferal::checkDeferals(), NULL);
 
 	delay1.again();
@@ -213,8 +215,8 @@ class Cppunit_tests: public Cppunit
 	    CHECK(delay4.remaining(), 21);
 	    CHECKP(Deferal::checkDeferals(), NULL);
 	    milli_count = 2001;
-	    CHECKP(Deferal::checkDeferals(), &delay3);
 	    CHECKP(Deferal::checkDeferals(), &delay1);
+	    CHECKP(Deferal::checkDeferals(), &delay3);
 	    CHECKP(Deferal::checkDeferals(), NULL);
 	    milli_count = 2020;
 	    CHECKP(Deferal::checkDeferals(), &delay4);
@@ -227,8 +229,8 @@ class Cppunit_tests: public Cppunit
 	    CHECKP(Deferal::checkDeferals(), NULL);
 	}
 	milli_count = 2200;
-	CHECKP(Deferal::checkDeferals(), &delay3);
-	delay1.stop();
+	CHECKP(Deferal::checkDeferals(), &delay1);
+	delay3.stop();
 	CHECKP(Deferal::checkDeferals(), NULL);
     }    
 
@@ -239,15 +241,15 @@ class Cppunit_tests: public Cppunit
 	counter = 0;
 	Deferal delay(200, endDelay, NULL, true);
 	milli_count = 1250;
-	CHECKP(Deferal::checkDeferals(), NULL);
+	CHECKP(Deferal::checkDeferals(), &delay);
         CHECKT(counter == 1);
 	delay.setDeferalFn(NULL);
 	milli_count = 1450;
-	CHECKP(Deferal::checkDeferals(), NULL);
+	CHECKP(Deferal::checkDeferals(), &delay);
         CHECKT(counter == 1);
 	delay.setDeferalFn(endDelay);
 	milli_count = 1650;
-	CHECKP(Deferal::checkDeferals(), NULL);
+	CHECKP(Deferal::checkDeferals(), &delay);
         CHECKT(counter == 2);
     }
 
