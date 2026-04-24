@@ -8,6 +8,8 @@
  * \endcode
  * @brief  
  * Implements the Deferal class.
+ *
+ * A Deferal is...
  * 
  */
 
@@ -336,6 +338,9 @@ Deferal::again(unsigned long delay, bool run_post_fn)
 	status_ = DEFERAL_RUNNING;
 	addDeferalEntry(this);
     }
+    else {
+	start(delay);
+    }
 }
 
 /**
@@ -383,6 +388,25 @@ void
 Deferal::setDelay(unsigned long delay)
 {
     delay_time_ = delay;
+}
+
+/**
+ * @brief Set the offset period for the first expiry of this Deferal.
+ *
+ * This should be set immediately after creating the Deferal or
+ * setting a delay.  This allows us to start a repeating delay with
+ * the first delay expiring sooner or later than the delay period.
+ * This allows us, for example, to set a heartbeat interval of one
+ * minute, with the first heartbeat occurring 30 seconds from now.
+ *
+ * @param offset  The delay for the first expiry of this Deferal 
+ * in units of Deferal::timer_fn_().  
+ */
+void
+Deferal::setOffset(unsigned long offset)
+{
+    unsigned long expiry_time = start_time_ + delay_time_;
+    start_time_ = expiry_time - offset;
 }
 
 

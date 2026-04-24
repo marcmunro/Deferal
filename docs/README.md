@@ -1,4 +1,4 @@
-# Deferal - Versatile Non blocking Delays and Deferred Execution
+# Deferal - Versatile Non blocking Delays and Deferred Execution Library
 
 This library provides non-blocking objects for implementing delays.
 Multiple delays may run concurrently, and they may be interleaved with

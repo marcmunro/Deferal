@@ -48,10 +48,10 @@ typedef enum {
  * @brief The Deferal class
  * 
  * A Deferal is an object for handling timeouts and other period-based
- * activities.   They provide non-blocking timed operations that can
- * be single-shot or repetitive.  Multiple Deferals can run
- * simultaneously.  A Deferal may be given a function which will be
- * called when it expires.
+ * activities.  Deferals provide non-blocking timed operations that
+ * can be single-shot or repetitive.  Multiple Deferals can run
+ * simultaneously.  A Deferal may be given a callback function which
+ * will be called when it expires.
  *
  * Deferals must be periodically checked by polling for expired
  * Deferals using Deferal::checkDeferals().  This returns the latest
@@ -135,6 +135,7 @@ class Deferal {
     void again(unsigned long delay = 0, bool run_post_fn=true);
     void setDeferalFn(PostDeferalFn fn, void *param = NULL);
     void setDelay(unsigned long delay);
+    void setOffset(unsigned long offset);
   protected:
     static void addDeferalEntry(Deferal *entry);
     static void removeDeferalEntry(Deferal *to_remove);
@@ -163,7 +164,8 @@ class Deferal {
     deferal_status_t status_;
     
     /// The function to be called when the Deferal expires.  May be
-    /// NULL if nothing is to be done.
+    /// NULL if nothing is to be done (ie expiry is to be handled by
+    /// other means).
     PostDeferalFn defer_fn_;
     
     /// The parameter to be passed to Deferal::defer_fn_()
@@ -176,7 +178,7 @@ class Deferal {
     /// For a running Deferal, this identifies the next Deferal in 
     /// Deferal::deferal_list_.  This will be NULL if we are nut
     /// running, or if we are the last Deferal in the list.
-    Deferal *next_;   // Allows Deferals to form a linked list.
+    Deferal *next_; 
     
 };
 
