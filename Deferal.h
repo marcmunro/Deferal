@@ -37,7 +37,8 @@ typedef unsigned long (*TimerFn)();
 typedef enum {
     DEFERAL_RUNNING = 42,
     DEFERAL_PAUSED,
-    DEFERAL_STOPPED
+    DEFERAL_STOPPED,
+    DEFERAL_PROCESSING  // Used to prevent unwanted recursion
 } deferal_status_t;
 
 
@@ -144,6 +145,7 @@ class Deferal {
 
     void init(unsigned long delay, bool autorepeat,
 	      bool start, TimerFn timer_fn);
+    bool expired();
     void updateStatus();
 
     /// Whether to automatically restart when we expire 
